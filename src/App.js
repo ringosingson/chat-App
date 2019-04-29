@@ -1,4 +1,15 @@
 import React from "react";
+import firebase from "firebase";
+
+const config = {
+  apiKey: "AIzaSyDgTfsHPv7L63JNEV7I0JRueVX05SwlOvM",
+  authDomain: "chat-app-2765a.firebaseapp.com",
+  databaseURL: "https://chat-app-2765a.firebaseio.com",
+  projectId: "chat-app-2765a",
+  storageBucket: "chat-app-2765a.appspot.com",
+  messagingSenderId: "820428682970"
+};
+firebase.initializeApp(config);
 
 function App() {
   return (
