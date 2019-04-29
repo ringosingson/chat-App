@@ -1,25 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { db } from "./firebase";
+import React from "react";
+
+import useCollection from "./useCollection";
 
 function Messages() {
-  const [messages, setMessages] = useState([]);
+  const messages = useCollection("channels/general/messages", "createdAt");
 
-  useEffect(() => {
-    db.collection("channels")
-      .doc("general")
-      .collection("messages")
-      .orderBy("createdAt")
-      .onSnapshot(snapshot => {
-        const docs = [];
-        snapshot.forEach(doc => {
-          docs.push({
-            ...doc.data(),
-            id: doc.id
-          });
-        });
-        setMessages(docs);
-      });
-  }, []);
   return (
     <div className="Messages">
       <div className="EndOfMessages">That's every message!</div>
