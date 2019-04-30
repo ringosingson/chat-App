@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import useCollection from "./useCollection";
 import { db } from "./firebase";
 
-function Messages() {
-  const messages = useCollection("channels/random/messages", "createdAt");
+function Messages({ channelId }) {
+  const messages = useCollection(`channels/${channelId}/messages`, "createdAt");
 
   return (
     <div className="Messages">
@@ -15,7 +15,11 @@ function Messages() {
         const showAvatar = !previous || message.user.id !== previous.user.id;
 
         return showAvatar ? (
-          <FirstMessageFromUser message={message} showDay={showDay} />
+          <FirstMessageFromUser
+            key={message.id}
+            message={message}
+            showDay={showDay}
+          />
         ) : (
           <div key={message.id}>
             <div className="Message no-avatar">
@@ -28,16 +32,34 @@ function Messages() {
   );
 }
 
+const cache = {};
+const pendingCache = {};
+
 function useDoc(path) {
-  const [doc, setDoc] = useState();
+  const [doc, setDoc] = useState(cache[path]);
   useEffect(() => {
-    db.doc(path).onSnapshot(doc => {
-      setDoc({
-        ...doc.data(),
-        id: doc.id
-      });
+    if (doc) {
+      return;
+    }
+    let stillMounted = true;
+
+    const pending = pendingCache[path];
+    const promise = pending || (pendingCache[path] = db.doc(path).get());
+
+    promise.then(doc => {
+      if (stillMounted) {
+        const user = {
+          ...doc.data(),
+          id: doc.id
+        };
+        setDoc(user);
+        cache[path] = user;
+      }
     });
-  });
+    return () => {
+      stillMounted = false;
+    };
+  }, [doc, path]);
   return doc;
 }
 
@@ -64,6 +86,7 @@ function FirstMessageFromUser({ message, showDay }) {
         <div className="Author">
           <div>
             <span className="UserName">{author && author.displayName} </span>
+            {""}
             <span className="TimeStamp">3:37 PM</span>
           </div>
           <div className="MessageContent">{message.text}</div>
