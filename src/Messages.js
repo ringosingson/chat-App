@@ -4,13 +4,6 @@ import useDocWithCache from "./useDocWithCache";
 import formateDate from "date-fns/format";
 import isSameDay from "date-fns/is_same_day";
 
-function useChatScrollManager(ref) {
-  useEffect(() => {
-    const node = ref.current;
-    node.scrollTop = node.scrollHeight;
-  });
-}
-
 function shouldShowDay(previous, message) {
   const isFirst = !previous;
   if (isFirst) {
@@ -37,14 +30,32 @@ function shouldShowAvatar(previous, message) {
   return hasBeenAWhile;
 }
 
+function ChatScroller(props) {
+  const ref = useRef();
+  const shouldScrollRef = useRef(true);
+
+  useEffect(() => {
+    if (shouldScrollRef.current) {
+      const node = ref.current;
+      node.scrollTop = node.scrollHeight;
+    }
+  });
+
+  const handleScroll = () => {
+    const node = ref.current;
+    const { scrollTop, clientHeight, scrollHeight } = node;
+    const atBottom = scrollHeight === clientHeight + scrollTop;
+    shouldScrollRef.current = atBottom;
+  };
+
+  return <div {...props} ref={ref} onScroll={handleScroll} />;
+}
+
 function Messages({ channelId }) {
   const messages = useCollection(`channels/${channelId}/messages`, "createdAt");
 
-  const scrollerRef = useRef();
-  useChatScrollManager(scrollerRef);
-
   return (
-    <div ref={scrollerRef} className="Messages">
+    <ChatScroller className="Messages">
       <div className="EndOfMessages">That's every message!</div>
 
       {messages.map((message, index) => {
@@ -66,7 +77,7 @@ function Messages({ channelId }) {
           </div>
         );
       })}
-    </div>
+    </ChatScroller>
   );
 }
 
